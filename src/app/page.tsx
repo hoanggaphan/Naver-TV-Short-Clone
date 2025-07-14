@@ -1,11 +1,13 @@
 import SideNav from "@/components/web/side-nav";
-import VideoCard from "@/components/web/video-card";
+import VideoFeed from "@/components/web/video-feed";
 
 export default async function Home() {
   return (
     <div className="flex">
       <SideNav/>
-      <VideoCard/>
+      <div className="flex-1">
+        <VideoFeed/>
+      </div>
     </div>
   );
 }
