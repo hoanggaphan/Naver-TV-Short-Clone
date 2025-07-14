@@ -1,13 +1,10 @@
+'use client'
+
 import { PlayCircle } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
 
 export default function Logo() {
   const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
   const isDark = theme === "dark";
   const textMain = isDark ? "white" : "#222";
 
