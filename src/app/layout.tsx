@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Naver TV Short Clone",
-  description: "A TikTok-style video sharing platform",
+  description: "A video sharing platform",
 };
 
 export default function RootLayout({
