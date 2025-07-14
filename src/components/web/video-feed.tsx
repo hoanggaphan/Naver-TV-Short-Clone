@@ -1,24 +1,53 @@
-import React from "react";
-import ReactPlayer from 'react-player'
+"use client";
+
+import React, { useState, useCallback } from "react";
+import VideoCard from "./video-card";
+
+const TIKTOK_VIDEO = "/video-test.mp4";
 
 const VideoFeed: React.FC = () => {
+  const [muted, setMuted] = useState(true);
+  const [playingIndex, setPlayingIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Khi video vào viewport, cập nhật playingIndex và tự động play
+  const handleVisible = useCallback((index: number) => {
+    if (index !== playingIndex) {
+      setPlayingIndex(index);
+      setIsPaused(false);
+    }
+  }, [playingIndex]);
+
+  // Khi user bấm mute, cập nhật muted cho toàn bộ feed
+  const handleMuteChange = useCallback((value: boolean) => {
+    setMuted(value);
+  }, []);
+
+  // Xử lý play/pause khi click overlay hoặc nút play/pause
+  const handlePlayToggle = useCallback((idx: number) => {
+    if (idx === playingIndex) {
+      setIsPaused((prev) => !prev);
+    } else {
+      setPlayingIndex(idx);
+      setIsPaused(false);
+    }
+  }, [playingIndex]);
+
   return (
     <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
-      {[1, 2, 3].map((item) => (
+      {[1, 2, 3].map((item, idx) => (
         <div
           key={item}
           className="snap-center p-[1em] h-screen flex items-center justify-center"
         >
-            <div className="aspect-[0.5625] bg-muted rounded-lg overflow-hidden min-w-[320px] min-h-[568px] h-full">
-              <ReactPlayer 
-                src="/video-test.mp4"
-                className="w-full h-full" 
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-              />
-            </div>
+          <VideoCard
+            src={TIKTOK_VIDEO}
+            playing={playingIndex === idx && !isPaused}
+            muted={muted}
+            onVisible={() => handleVisible(idx)}
+            onMuteChange={handleMuteChange}
+            onPlayToggle={() => handlePlayToggle(idx)}
+          />
         </div>
       ))}
     </div>

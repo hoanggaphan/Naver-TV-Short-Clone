@@ -6,7 +6,7 @@ export default async function Home() {
     <div className="flex">
       <SideNav/>
       <div className="flex-1">
-        <VideoFeed/>
+        <VideoFeed />
       </div>
     </div>
   );
