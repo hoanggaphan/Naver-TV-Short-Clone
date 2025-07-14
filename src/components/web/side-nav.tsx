@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import LoginModal from "./login-modal";
+import { signOut, useSession } from 'next-auth/react';
 
 const navItems = [
   { label: "Đề xuất", icon: Flame },
@@ -34,6 +35,10 @@ function ThemeToggleButton() {
 
 export default function SideNav() {
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const session = useSession();
+  const isAuthenticated = session?.status === "authenticated";
+  
   return (
     <div className="flex flex-col w-[240px] min-h-screen border-r border-border bg-background">
       <aside className="flex flex-col items-center py-6 gap-6 flex-1">
@@ -50,12 +55,22 @@ export default function SideNav() {
             </Button>
           ))}
         </nav>
-        <Button
-          className="w-[90%] bg-[#03c75a] text-white font-bold text-lg rounded py-3 hover:bg-[#02b150] transition-colors shadow-md"
-          onClick={() => setShowLoginModal(true)}
-        >
-          Đăng nhập
-        </Button>
+        {
+            isAuthenticated ? 
+            <Button
+                className="w-[90%] bg-[#03c75a] text-white font-bold text-lg rounded py-3 hover:bg-[#02b150] transition-colors shadow-md"
+                onClick={() => signOut({ redirect: false })}
+            >
+                Đăng xuất
+            </Button> 
+            : 
+            <Button
+                className="w-[90%] bg-[#03c75a] text-white font-bold text-lg rounded py-3 hover:bg-[#02b150] transition-colors shadow-md"
+                onClick={() => setShowLoginModal(true)}
+            >
+                Đăng nhập
+            </Button>
+        }
       </aside>
       <div className="w-full flex flex-col items-center gap-2 pb-8">
         <ThemeToggleButton />
