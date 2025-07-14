@@ -1,8 +1,11 @@
 "use client";
 
 import { Heart, MessageCircle, Play, Share2, Volume2, VolumeX } from "lucide-react";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
+import ShareModal from "./share-modal";
+import { useSession } from "next-auth/react";
+import LoginModal from "./login-modal";
 
 interface VideoCardProps {
   src: string;
@@ -15,6 +18,11 @@ interface VideoCardProps {
 
 const VideoCard: React.FC<VideoCardProps> = ({ src, playing, muted, onVisible, onMuteChange, onPlayToggle }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const [showShare, setShowShare] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const session = useSession();
+  const isAuthenticated = session?.status === "authenticated";
 
   // IntersectionObserver để báo cha khi vào viewport
   useEffect(() => {
@@ -31,6 +39,26 @@ const VideoCard: React.FC<VideoCardProps> = ({ src, playing, muted, onVisible, o
     observer.observe(node);
     return () => observer.disconnect();
   }, [onVisible]);
+
+  // Handle like
+  const handleLike = () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    // TODO: Thực hiện chức năng like thực tế
+    alert('Liked!');
+  };
+
+  // Handle comment
+  const handleComment = () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    // TODO: Thực hiện chức năng comment thực tế
+    alert('Comment!');
+  };
 
   return (
     <div ref={ref} className="relative aspect-[0.5625] bg-black rounded-xl overflow-hidden min-w-[320px] min-h-[568px] h-full group">
@@ -65,16 +93,21 @@ const VideoCard: React.FC<VideoCardProps> = ({ src, playing, muted, onVisible, o
             </div>
           </div>
           <div className="flex flex-col gap-2 items-end pointer-events-auto">
-            <button className="bg-white/20 rounded-full p-2">
+            <button className="bg-white/20 rounded-full p-2" onClick={handleLike}>
               <Heart className="text-white" />
             </button>
-            <button className="bg-white/20 rounded-full p-2">
+            <button className="bg-white/20 rounded-full p-2" onClick={handleComment}>
               <MessageCircle className="text-white" />
             </button>
-            <button className="bg-white/20 rounded-full p-2">
+            <button className="bg-white/20 rounded-full p-2" onClick={() => setShowShare(true)}>
               <Share2 className="text-white" />
             </button>
-            
+            <button
+              className="bg-white/20 rounded-full p-2"
+              onClick={onPlayToggle}
+            >
+              {playing ? <span className="block w-6 h-6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pause text-white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></span> : <Play className="text-white" />}
+            </button>
             <button
               className="bg-white/20 rounded-full p-2"
               onClick={() => onMuteChange(!muted)}
@@ -90,6 +123,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ src, playing, muted, onVisible, o
         aria-label="Toggle play/pause"
         onClick={onPlayToggle}
       />
+
+      {/* Share Modal */}
+      <ShareModal open={showShare} onOpenChange={setShowShare} />
+
+      {/* Login Modal */}
+      <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 };
