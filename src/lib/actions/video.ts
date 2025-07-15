@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { pinata } from "../pinata";
 
 export const createVideo = async (formData: FormData) => {
     const title = formData.get('title') as string | null;
@@ -19,7 +21,12 @@ export const createVideo = async (formData: FormData) => {
     if (description) data.description = description;
     if (thumbnail) data.thumbnail = thumbnail;
 
-    return await prisma.video.create({ data });
+    const result = await prisma.video.create({ data });
+
+    // Revalidate upload page để refresh danh sách video
+    revalidatePath('/upload');
+
+    return result;
 };
 
 /**
@@ -44,14 +51,22 @@ export const getUserVideos = async (userId: string, page = 1, limit = 10) => {
 };
 
 /**
- * Xóa video theo id và userId (chỉ cho phép xóa video của chính mình)
- * @param id string
+ * Xóa video theo pinataId và userId (chỉ cho phép xóa video của chính mình)
+ * @param pinataId string
  * @param userId string
  */
 export const deleteVideo = async (pinataId: string, userId: string) => {
-    if (!pinataId || !userId) throw new Error('Thiếu id hoặc userId');
+    if (!pinataId || !userId) throw new Error('Thiếu pinataId hoặc userId');
+
     // Đảm bảo chỉ xóa video của chính mình
-    return await prisma.video.deleteMany({ where: { pinataId, userId } });
+    const result = await prisma.video.deleteMany({
+        where: { pinataId, userId }
+    });
+
+    // Revalidate upload page để refresh danh sách video
+    revalidatePath('/upload');
+
+    return result;
 };
 
 /**
@@ -71,3 +86,11 @@ export const getAllVideos = async (page = 1, limit = 10) => {
     ]);
     return { videos, total, page, limit };
 };
+
+/**
+ * Xóa file trên Pinata theo pinataId (server action)
+ * @param pinataId string
+ */
+export async function deletePinataFile(pinataId: string) {
+    await pinata.files.public.delete([pinataId])
+}
