@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import { Compass, Flame, Moon, PlusSquare, Sun, User } from "lucide-react";
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from "next-themes";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import LoginModal from "./login-modal";
 import Logo from "./logo";
@@ -39,14 +38,19 @@ export default function SideNav() {
   const session = useSession();
   const isAuthenticated = session?.status === "authenticated";
   const pathname = usePathname();
-  
-  const handleNavItemClick = (item: typeof navItems[0], e: React.MouseEvent) => {
+  const router = useRouter();
+
+  const handleNavItemClick = (item: typeof navItems[0]) => {
+    // Nếu route ko yêu cầu login thì cho navigate bình thường
+    if (!item.requireAuth || (item.requireAuth && isAuthenticated)) {
+      router.push(item.url);
+      return;
+    }
+
     // Nếu item yêu cầu authentication và user chưa đăng nhập
     if (item.requireAuth && !isAuthenticated) {
-      e.preventDefault(); // Ngăn navigation
       setShowLoginModal(true); // Hiển thị login modal
-    }
-    // Nếu đã đăng nhập hoặc không yêu cầu auth thì để Link tự xử lý navigation
+    } 
   };
 
   // Hàm kiểm tra route hiện tại có requireAuth không
@@ -61,7 +65,7 @@ export default function SideNav() {
 
   const handleLogout = async () => {
     if (isCurrentRouteProtected()) {
-      await signOut({ redirect: true });
+      await signOut({ callbackUrl: "/" });
     } else {
       await signOut({ redirect: false });
     }
@@ -73,7 +77,7 @@ export default function SideNav() {
         <Logo />
         <nav className="flex flex-col gap-2 w-full mt-8">
           {navItems.map((item) => {
-            const { label, icon: Icon, url, requireAuth } = item;
+            const { label, icon: Icon, url } = item;
             const isActive = url === "/"
               ? pathname === "/"
               : pathname.startsWith(url);
@@ -81,22 +85,12 @@ export default function SideNav() {
             return (
               <Button
                 key={label}
-                asChild={!requireAuth || isAuthenticated} // Chỉ dùng asChild khi không cần auth hoặc đã auth
                 variant="ghost"
                 className="flex items-center gap-4 px-6 py-3 rounded w-[90%] mx-auto text-lg font-semibold hover:bg-accent/60 transition-colors justify-start"
-                onClick={requireAuth && !isAuthenticated ? (e) => handleNavItemClick(item, e) : undefined}
+                onClick={() => handleNavItemClick(item)}
               >
-                {(!requireAuth || isAuthenticated) ? (
-                  <Link href={url}>
-                    <Icon className={cn("size-6", isActive && "text-[#03c75a]")} />
-                    <span className={cn("hidden md:inline", isActive && "text-[#03c75a]")}>{label}</span>
-                  </Link>
-                ) : (
-                  <>
-                    <Icon className="size-6" />
-                    <span className="hidden md:inline">{label}</span>
-                  </>
-                )}
+                <Icon className={cn("size-6", isActive && "text-[#03c75a]")} />
+                <span className={cn("hidden md:inline", isActive && "text-[#03c75a]")}>{label}</span>
               </Button>
             );
           })}
