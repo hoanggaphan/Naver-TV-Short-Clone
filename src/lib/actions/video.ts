@@ -21,3 +21,53 @@ export const createVideo = async (formData: FormData) => {
 
     return await prisma.video.create({ data });
 };
+
+/**
+ * Lấy danh sách video của user đang đăng nhập (có phân trang)
+ * @param userId string
+ * @param page number (mặc định 1)
+ * @param limit number (mặc định 10)
+ */
+export const getUserVideos = async (userId: string, page = 1, limit = 10) => {
+    if (!userId) throw new Error('Thiếu userId');
+    const skip = (page - 1) * limit;
+    const [videos, total] = await Promise.all([
+        prisma.video.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.video.count({ where: { userId } })
+    ]);
+    return { videos, total, page, limit };
+};
+
+/**
+ * Xóa video theo id và userId (chỉ cho phép xóa video của chính mình)
+ * @param id string
+ * @param userId string
+ */
+export const deleteVideo = async (id: string, userId: string) => {
+    if (!id || !userId) throw new Error('Thiếu id hoặc userId');
+    // Đảm bảo chỉ xóa video của chính mình
+    return await prisma.video.deleteMany({ where: { id, userId } });
+};
+
+/**
+ * Lấy tất cả video (có phân trang) cho trang khám phá
+ * @param page number (mặc định 1)
+ * @param limit number (mặc định 10)
+ */
+export const getAllVideos = async (page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+    const [videos, total] = await Promise.all([
+        prisma.video.findMany({
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.video.count()
+    ]);
+    return { videos, total, page, limit };
+};
