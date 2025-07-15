@@ -18,7 +18,7 @@ interface UploadFormValues {
     title: string;
     description: string;
     video: File | null;
-  }
+}
 
 export default function UploadForm() {
     const session = useSession();
@@ -50,6 +50,7 @@ export default function UploadForm() {
   
     const uploadVideoToPinata = async (file: File): Promise<{ fileUrl: string, pinataId: string }> => {
       try {
+        // Upload file gốc, không đổi tên
         // Lấy signed URL từ API
         const response = await fetch('/api/upload-url');
         if (!response.ok) {
@@ -89,33 +90,43 @@ export default function UploadForm() {
   
       toast.promise(
         (async () => {
-          // 1. Upload video lên Pinata
-          const { fileUrl: videoUrl, pinataId } = await uploadVideoToPinata(data.video!);
-          
-          // 2. Tạo FormData để gửi lên server action
-          const formData = new FormData();
-          formData.append("title", data.title);
-          formData.append("description", data.description || "");
-          formData.append("videoUrl", videoUrl);
-          formData.append("pinataId", pinataId);
-          if (!session.data?.user?.id) {
-            throw new Error("Không tìm thấy userId trong session");
+          try {
+            // 1. Upload video lên Pinata
+            const { fileUrl: videoUrl, pinataId } = await uploadVideoToPinata(data.video!);
+            
+            // 2. Tạo FormData để gửi lên server action
+            const formData = new FormData();
+            formData.append("title", data.title);
+            formData.append("description", data.description || "");
+            formData.append("videoUrl", videoUrl);
+            formData.append("pinataId", pinataId);
+            if (!session.data?.user?.id) {
+              throw new Error("Không tìm thấy userId trong session");
+            }
+            formData.append("userId", session.data.user.id);
+            
+            // 3. Tạo video trong database
+            await createVideo(formData);
+            
+            // 4. Reset form và preview
+            form.reset();
+            setPreview(null);
+            setIsUploading(false);
+          } catch (err: unknown) {
+            setIsUploading(false);
+            const message = typeof err === 'object' && err && 'message' in err ? (err as { message?: string }).message : '';
+            if (typeof message === 'string' && (message.includes('Unique constraint failed') || message.includes('unique') || message.includes('pinataId'))) {
+              throw new Error('Bạn đã upload video này rồi!');
+            }
+            throw err;
           }
-          formData.append("userId", session.data.user.id);
-          
-          // 3. Tạo video trong database
-          await createVideo(formData);
-          
-          // 4. Reset form và preview
-          form.reset();
-          setPreview(null);
-          setIsUploading(false);
         })(),
         {
           loading: "Đang upload...",
           success: "Upload video thành công!",
           error: (err) => {
             setIsUploading(false);
+            setError(err?.message);
             return err?.message || "Có lỗi xảy ra khi upload video"
           },
         }
