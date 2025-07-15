@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 interface UploadFormValues {
     title: string;
@@ -86,37 +87,35 @@ export default function UploadForm() {
       setError(null);
       setIsUploading(true);
   
-      try {
-        // 1. Upload video lên Pinata
-        const videoUrl = await uploadVideoToPinata(data.video);
-        
-        // 2. Tạo FormData để gửi lên server action
-        const formData = new FormData();
-        formData.append("title", data.title);
-        formData.append("description", data.description || "");
-        formData.append("videoUrl", videoUrl);
-        if (!session.data?.user?.id) {
-          throw new Error("Không tìm thấy userId trong session");
+      await toast.promise(
+        (async () => {
+          // 1. Upload video lên Pinata
+          const videoUrl = await uploadVideoToPinata(data.video!);
+          
+          // 2. Tạo FormData để gửi lên server action
+          const formData = new FormData();
+          formData.append("title", data.title);
+          formData.append("description", data.description || "");
+          formData.append("videoUrl", videoUrl);
+          if (!session.data?.user?.id) {
+            throw new Error("Không tìm thấy userId trong session");
+          }
+          formData.append("userId", session.data.user.id);
+          
+          // 3. Tạo video trong database
+          await createVideo(formData);
+          
+          // 4. Reset form và preview
+          form.reset();
+          setPreview(null);
+            setIsUploading(false);
+        })(),
+        {
+          loading: "Đang upload...",
+          success: "Upload video thành công!",
+          error: (err) => err?.message || "Có lỗi xảy ra khi upload video",
         }
-        formData.append("userId", session.data.user.id);
-        
-        // 3. Tạo video trong database
-        await createVideo(formData);
-        
-        // 4. Reset form và thông báo thành công
-        form.reset();
-        setPreview(null);
-        alert("Upload video thành công!");
-        
-        // Có thể redirect hoặc refresh trang
-        // window.location.href = `/video/${newVideo.id}`;
-        
-      } catch (error) {
-        console.error("Upload error:", error);
-        setError(error instanceof Error ? error.message : "Có lỗi xảy ra khi upload video");
-      } finally {
-        setIsUploading(false);
-      }
+      );
     };
 
   return (
