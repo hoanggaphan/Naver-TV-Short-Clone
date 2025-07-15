@@ -1,4 +1,3 @@
-// src/app/(tv-short)/upload/page.tsx
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import UploadForm from "./_components/upload-form";

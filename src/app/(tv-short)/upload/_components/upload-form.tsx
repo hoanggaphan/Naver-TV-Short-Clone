@@ -73,7 +73,7 @@ export default function UploadForm() {
       }
     };
   
-    const onSubmit = async (data: UploadFormValues) => {
+    const onSubmit = (data: UploadFormValues) => {
       if (!data.title || !data.video) {
         setError("Vui lòng nhập tiêu đề và chọn video!");
         return;
@@ -87,7 +87,7 @@ export default function UploadForm() {
       setError(null);
       setIsUploading(true);
   
-      await toast.promise(
+      toast.promise(
         (async () => {
           // 1. Upload video lên Pinata
           const { fileUrl: videoUrl, pinataId } = await uploadVideoToPinata(data.video!);

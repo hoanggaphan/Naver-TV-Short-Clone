@@ -39,7 +39,7 @@ export default function RootLayout({
             <SessionProvider>
                 {children}
             </SessionProvider>
-            <Toaster position="top-center" />
+            <Toaster />
           </ThemeProvider>
       </body>
     </html>
