@@ -7,8 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { VideoIcon, UploadCloud, X } from "lucide-react";
+import { VideoIcon, UploadCloud, X, Loader2 } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useSession } from "next-auth/react";
+import { createVideo } from "@/lib/actions/video";
+import { pinata } from "@/lib/pinata";
 
 interface UploadFormValues {
   title: string;
@@ -17,11 +20,13 @@ interface UploadFormValues {
 }
 
 export default function Upload() {
+  const { data: session } = useSession();
   const form = useForm<UploadFormValues>({
     defaultValues: { title: "", description: "", video: null },
   });
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles[0]) {
@@ -41,18 +46,73 @@ export default function Upload() {
     setPreview(null);
   };
 
+  const uploadVideoToPinata = async (file: File): Promise<string> => {
+    try {
+      // Lấy signed URL từ API
+      const response = await fetch('/api/upload');
+      if (!response.ok) {
+        throw new Error('Không thể lấy signed URL');
+      }
+      
+      const { url } = await response.json();
+      
+      // Upload file lên Pinata sử dụng signed URL
+      const upload = await pinata.upload.public
+        .file(file)
+        .url(url); 
+      
+      // Upload the file with the signed URL
+      const fileUrl = await pinata.gateways.public.convert(upload.cid)
+      
+      return fileUrl
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw new Error('Không thể upload video');
+    }
+  };
+
   const onSubmit = async (data: UploadFormValues) => {
     if (!data.title || !data.video) {
       setError("Vui lòng nhập tiêu đề và chọn video!");
       return;
     }
+
+    if (!session?.user?.id) {
+      setError("Bạn cần đăng nhập để upload video!");
+      return;
+    }
+
     setError(null);
-    const formData = new FormData();
-    formData.append("title", data.title);
-    formData.append("description", data.description);
-    if (data.video) formData.append("video", data.video);
-    // TODO: Gửi formData lên API /api/upload
-    alert("Đã gửi! (Chưa kết nối API)");
+    setIsUploading(true);
+
+    try {
+      // 1. Upload video lên Pinata
+      const videoUrl = await uploadVideoToPinata(data.video);
+      
+      // 2. Tạo FormData để gửi lên server action
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description || "");
+      formData.append("videoUrl", videoUrl);
+      formData.append("userId", session.user.id);
+      
+      // 3. Tạo video trong database
+      await createVideo(formData);
+      
+      // 4. Reset form và thông báo thành công
+      form.reset();
+      setPreview(null);
+      alert("Upload video thành công!");
+      
+      // Có thể redirect hoặc refresh trang
+      // window.location.href = `/video/${newVideo.id}`;
+      
+    } catch (error) {
+      console.error("Upload error:", error);
+      setError(error instanceof Error ? error.message : "Có lỗi xảy ra khi upload video");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -69,13 +129,20 @@ export default function Upload() {
                 <FormControl>
                   <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition bg-muted/50 hover:bg-muted/80 ${isDragActive ? "border-primary" : "border-muted"}`}
+                    className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition bg-muted/50 hover:bg-muted/80 ${isDragActive ? "border-primary" : "border-muted"} ${isUploading ? "pointer-events-none opacity-50" : ""}`}
                   >
-                    <input {...getInputProps()} />
+                    <input {...getInputProps()} disabled={isUploading} />
                     {preview ? (
                       <div className="relative w-full flex flex-col items-center">
                         <video src={preview} controls className="rounded-lg max-h-64 w-full mb-2" />
-                        <Button type="button" variant="destructive" size="sm" className="absolute top-2 right-2" onClick={removeVideo}>
+                        <Button 
+                          type="button" 
+                          variant="destructive" 
+                          size="sm" 
+                          className="absolute top-2 right-2" 
+                          onClick={removeVideo}
+                          disabled={isUploading}
+                        >
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
@@ -99,7 +166,11 @@ export default function Upload() {
               <FormItem>
                 <FormLabel>Tiêu đề</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nhập tiêu đề video" {...field} />
+                  <Input 
+                    placeholder="Nhập tiêu đề video" 
+                    {...field} 
+                    disabled={isUploading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,14 +183,32 @@ export default function Upload() {
               <FormItem>
                 <FormLabel>Mô tả</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Mô tả ngắn về video (không bắt buộc)" {...field} />
+                  <Textarea 
+                    placeholder="Mô tả ngắn về video (không bắt buộc)" 
+                    {...field} 
+                    disabled={isUploading}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full text-base font-semibold py-6">
-            <VideoIcon className="mr-2" /> Đăng video
+          <Button 
+            type="submit" 
+            className="w-full text-base font-semibold py-6"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Đang upload...
+              </>
+            ) : (
+              <>
+                <VideoIcon className="mr-2" />
+                Đăng video
+              </>
+            )}
           </Button>
           {error && (
             <Alert variant="destructive" className="mt-2">
@@ -132,4 +221,3 @@ export default function Upload() {
     </div>
   );
 }
-  
