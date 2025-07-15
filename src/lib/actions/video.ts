@@ -9,13 +9,13 @@ export const createVideo = async (formData: FormData) => {
     const videoUrl = formData.get('videoUrl') as string | null;
     const thumbnail = formData.get('thumbnail') as string | null;
     const userId = formData.get('userId') as string | null;
+    const pinataId = formData.get('pinataId') as string | null;
 
-    if (!title || !videoUrl || !userId) {
+    if (!title || !videoUrl || !userId || !pinataId) {
         throw new Error('Thiếu trường bắt buộc');
     }
 
-    // Tạo object data chỉ chứa trường có giá trị
-    const data: Prisma.VideoUncheckedCreateInput = { title, videoUrl, userId };
+    const data: Prisma.VideoUncheckedCreateInput = { title, videoUrl, userId, pinataId };
     if (description) data.description = description;
     if (thumbnail) data.thumbnail = thumbnail;
 
@@ -48,10 +48,10 @@ export const getUserVideos = async (userId: string, page = 1, limit = 10) => {
  * @param id string
  * @param userId string
  */
-export const deleteVideo = async (id: string, userId: string) => {
-    if (!id || !userId) throw new Error('Thiếu id hoặc userId');
+export const deleteVideo = async (pinataId: string, userId: string) => {
+    if (!pinataId || !userId) throw new Error('Thiếu id hoặc userId');
     // Đảm bảo chỉ xóa video của chính mình
-    return await prisma.video.deleteMany({ where: { id, userId } });
+    return await prisma.video.deleteMany({ where: { pinataId, userId } });
 };
 
 /**

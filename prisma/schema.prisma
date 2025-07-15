@@ -73,6 +73,7 @@ model Video {
   videoUrl    String
   thumbnail   String?
   userId      String
+  pinataId    String   @unique
 
   createdAt   DateTime @default(now())
   updatedAt DateTime @updatedAt

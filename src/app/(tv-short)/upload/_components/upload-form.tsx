@@ -48,7 +48,7 @@ export default function UploadForm() {
       setPreview(null);
     };
   
-    const uploadVideoToPinata = async (file: File): Promise<string> => {
+    const uploadVideoToPinata = async (file: File): Promise<{ fileUrl: string, pinataId: string }> => {
       try {
         // Lấy signed URL từ API
         const response = await fetch('/api/upload-url');
@@ -66,7 +66,7 @@ export default function UploadForm() {
         // Upload the file with the signed URL
         const fileUrl = await pinata.gateways.public.convert(upload.cid)
         
-        return fileUrl
+        return { fileUrl, pinataId: upload.id };
       } catch (error) {
         console.error('Upload error:', error);
         throw new Error('Không thể upload video');
@@ -90,13 +90,14 @@ export default function UploadForm() {
       await toast.promise(
         (async () => {
           // 1. Upload video lên Pinata
-          const videoUrl = await uploadVideoToPinata(data.video!);
+          const { fileUrl: videoUrl, pinataId } = await uploadVideoToPinata(data.video!);
           
           // 2. Tạo FormData để gửi lên server action
           const formData = new FormData();
           formData.append("title", data.title);
           formData.append("description", data.description || "");
           formData.append("videoUrl", videoUrl);
+          formData.append("pinataId", pinataId);
           if (!session.data?.user?.id) {
             throw new Error("Không tìm thấy userId trong session");
           }
@@ -108,12 +109,15 @@ export default function UploadForm() {
           // 4. Reset form và preview
           form.reset();
           setPreview(null);
-            setIsUploading(false);
+          setIsUploading(false);
         })(),
         {
           loading: "Đang upload...",
           success: "Upload video thành công!",
-          error: (err) => err?.message || "Có lỗi xảy ra khi upload video",
+          error: (err) => {
+            setIsUploading(false);
+            return err?.message || "Có lỗi xảy ra khi upload video"
+          },
         }
       );
     };
