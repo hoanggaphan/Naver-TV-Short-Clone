@@ -83,8 +83,8 @@ const VideoFeed: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-lg">Đang tải video...</div>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-foreground dark:text-white text-lg">Đang tải video...</div>
       </div>
     );
   }
@@ -92,8 +92,8 @@ const VideoFeed: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-lg text-center">
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-foreground dark:text-white text-lg text-center">
           <p>{error}</p>
           <button 
             onClick={() => window.location.reload()} 
@@ -109,7 +109,7 @@ const VideoFeed: React.FC = () => {
   // No videos state
   if (videos.length === 0) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
+      <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-white text-lg text-center">
           <p>Chưa có video nào</p>
           <p className="text-sm text-gray-400 mt-2">Hãy đăng video đầu tiên!</p>
