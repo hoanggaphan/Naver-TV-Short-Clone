@@ -66,17 +66,33 @@ const VideoCard: React.FC<VideoCardProps> = ({
       setShowLoginModal(true);
       return;
     }
-    
+  
     if (!session?.data?.user?.id) return;
-    
+  
+    // Optimistic update
+    const prevLiked = isLiked;
+    const prevCount = likeCount;
+  
+    const nextLiked = !prevLiked;
+    const nextCount = prevCount + (nextLiked ? 1 : -1);
+  
+    setIsLiked(nextLiked);
+    setLikeCount(nextCount);
+  
     try {
       const result = await toggleLike(video.id, session.data.user.id);
+  
+      // Sync back in case server returns something else
       setIsLiked(result.liked);
-      setLikeCount(prev => result.liked ? prev + 1 : prev - 1);
+      setLikeCount(result.liked ? prevCount + 1 : prevCount - 1);
     } catch (error) {
+      // Rollback if error
+      setIsLiked(prevLiked);
+      setLikeCount(prevCount);
       console.error('Error toggling like:', error);
     }
   };
+  
 
   // Handle comment
   const handleComment = () => {
@@ -161,7 +177,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 }`}
                 onClick={handleLike}
               >
-                <Heart className={`text-white ${isLiked ? 'fill-red-500' : ''}`} />
+                <Heart className={`text-white ${isLiked ? 'fill-red-500 text-red-500!' : ''}`} />
               </button>
               {likeCount > 0 && (
                 <span className="text-white text-xs mt-1">{likeCount}</span>

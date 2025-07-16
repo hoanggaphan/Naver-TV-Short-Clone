@@ -27,6 +27,8 @@ interface Video {
   isLiked: boolean;
 }
 
+const PAGE_SIZE = 10;
+
 const VideoFeed: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ const VideoFeed: React.FC = () => {
     const loadVideos = async () => {
       try {
         setLoading(true);
-        const result = await getAllVideosWithDetails(1, 10, userId);
+        const result = await getAllVideosWithDetails(1, PAGE_SIZE, userId);
         setVideos(result.videos);
         setHasMore(result.videos.length < result.total);
         setError(null);
@@ -66,10 +68,10 @@ const VideoFeed: React.FC = () => {
     setIsFetchingMore(true);
     try {
       const nextPage = page + 1;
-      const result = await getAllVideosWithDetails(nextPage, 10, userId);
+      const result = await getAllVideosWithDetails(nextPage, PAGE_SIZE, userId);
       setVideos((prev) => [...prev, ...result.videos]);
       setPage(nextPage);
-      setHasMore((nextPage * 10) < result.total);
+      setHasMore((nextPage * PAGE_SIZE) < result.total);
     } catch (err) {
       setError('Không thể tải thêm video.');
       console.error('Error loading more videos:', err);
