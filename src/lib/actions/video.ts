@@ -51,6 +51,15 @@ export const getUserVideos = async (userId: string, page = 1, limit = 10) => {
 };
 
 /**
+ * Lấy tổng số video của user
+ * @param userId string
+ */
+export const getUserVideosCount = async (userId: string) => {
+    if (!userId) throw new Error('Thiếu userId');
+    return prisma.video.count({ where: { userId } });
+};
+
+/**
  * Xóa video theo pinataId và userId (chỉ cho phép xóa video của chính mình)
  * @param pinataId string
  * @param userId string

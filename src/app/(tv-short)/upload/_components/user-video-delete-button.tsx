@@ -10,9 +10,10 @@ interface DeleteVideoButtonProps {
   pinataId: string;
   title: string;
   userId: string;
+  onVideoDeleted?: (pinataId: string) => void;
 }
 
-export default function DeleteVideoButton({ pinataId, title, userId }: DeleteVideoButtonProps) {
+export default function DeleteVideoButton({ pinataId, title, userId, onVideoDeleted }: DeleteVideoButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
@@ -30,6 +31,7 @@ export default function DeleteVideoButton({ pinataId, title, userId }: DeleteVid
           if (result.count === 0) {
             throw new Error("Video không tồn tại hoặc bạn không có quyền xóa");
           }
+          if (onVideoDeleted) onVideoDeleted(pinataId);
         })(),
         {
           loading: "Đang xóa...",

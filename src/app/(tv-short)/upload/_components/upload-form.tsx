@@ -14,13 +14,28 @@ import { useDropzone } from "react-dropzone";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+type RenderVideo = {
+  id: string;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  thumbnail: string | null;
+  pinataId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 interface UploadFormValues {
     title: string;
     description: string;
     video: File | null;
 }
 
-export default function UploadForm() {
+interface UploadFormProps {
+  onVideoUploaded?: (video: RenderVideo) => void;
+}
+
+export default function UploadForm({ onVideoUploaded }: UploadFormProps) {
     const session = useSession();
     const isAuthenticated = session?.status === "authenticated";
     const form = useForm<UploadFormValues>({
@@ -106,12 +121,17 @@ export default function UploadForm() {
             formData.append("userId", session.data.user.id);
             
             // 3. Tạo video trong database
-            await createVideo(formData);
+            const result = await createVideo(formData);
             
             // 4. Reset form và preview
             form.reset();
             setPreview(null);
             setIsUploading(false);
+            if (onVideoUploaded && result) onVideoUploaded({
+              ...result,
+              createdAt: typeof result.createdAt === "string" ? result.createdAt : result.createdAt instanceof Date ? result.createdAt.toISOString() : "",
+              updatedAt: typeof result.updatedAt === "string" ? result.updatedAt : result.updatedAt instanceof Date ? result.updatedAt.toISOString() : "",
+            });
           } catch (err: unknown) {
             setIsUploading(false);
             const message = typeof err === 'object' && err && 'message' in err ? (err as { message?: string }).message : '';
