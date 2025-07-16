@@ -103,3 +103,116 @@ export const getAllVideos = async (page = 1, limit = 10) => {
 export async function deletePinataFile(pinataId: string) {
     await pinata.files.public.delete([pinataId])
 }
+
+/**
+ * Toggle like/unlike video
+ * @param videoId string
+ * @param userId string
+ */
+export const toggleLike = async (videoId: string, userId: string) => {
+    if (!videoId || !userId) throw new Error('Thiếu videoId hoặc userId');
+
+    // Kiểm tra xem user đã like video này chưa
+    const existingLike = await prisma.like.findUnique({
+        where: {
+            userId_videoId: {
+                userId,
+                videoId
+            }
+        }
+    });
+
+    if (existingLike) {
+        // Nếu đã like thì unlike
+        await prisma.like.delete({
+            where: {
+                id: existingLike.id
+            }
+        });
+        return { liked: false };
+    } else {
+        // Nếu chưa like thì like
+        await prisma.like.create({
+            data: {
+                userId,
+                videoId
+            }
+        });
+        return { liked: true };
+    }
+};
+
+/**
+ * Lấy thông tin like của video
+ * @param videoId string
+ * @param userId string | null
+ */
+export const getVideoLikeInfo = async (videoId: string, userId: string | null = null) => {
+    if (!videoId) throw new Error('Thiếu videoId');
+
+    const [likeCount, userLike] = await Promise.all([
+        prisma.like.count({ where: { videoId } }),
+        userId ? prisma.like.findUnique({
+            where: {
+                userId_videoId: {
+                    userId,
+                    videoId
+                }
+            }
+        }) : null
+    ]);
+
+    return {
+        likeCount,
+        isLiked: !!userLike
+    };
+};
+
+/**
+ * Lấy tất cả video kèm thông tin user và like count
+ * @param page number (mặc định 1)
+ * @param limit number (mặc định 10)
+ * @param currentUserId string | null
+ */
+export const getAllVideosWithDetails = async (page = 1, limit = 10, currentUserId: string | null = null) => {
+    const skip = (page - 1) * limit;
+    const [videos, total] = await Promise.all([
+        prisma.video.findMany({
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true
+                    }
+                },
+                likes: currentUserId ? {
+                    where: { userId: currentUserId }
+                } : false,
+                _count: {
+                    select: {
+                        likes: true,
+                        comments: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.video.count()
+    ]);
+
+    // Format data để dễ sử dụng
+    const formattedVideos = videos.map(video => ({
+        ...video,
+        likeCount: video._count.likes,
+        commentCount: video._count.comments,
+        isLiked: currentUserId ? video.likes.length > 0 : false,
+        likes: undefined, // Remove likes array from response
+        _count: undefined // Remove _count from response
+    }));
+
+    return { videos: formattedVideos, total, page, limit };
+};
