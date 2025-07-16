@@ -34,7 +34,6 @@ interface VideoCardProps {
   video: Video;
   playing: boolean;
   muted: boolean;
-  onVisible: () => void;
   onMuteChange: (value: boolean) => void;
   onPlayToggle: () => void;
 }
@@ -43,7 +42,6 @@ const VideoCard: React.FC<VideoCardProps> = ({
   video, 
   playing, 
   muted, 
-  onVisible, 
   onMuteChange, 
   onPlayToggle 
 }) => {
@@ -61,22 +59,6 @@ const VideoCard: React.FC<VideoCardProps> = ({
     setIsLiked(video.isLiked);
     setLikeCount(video.likeCount);
   }, [video.isLiked, video.likeCount]);
-
-  // IntersectionObserver để báo cha khi vào viewport
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new window.IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-          onVisible();
-        }
-      },
-      { threshold: [0.6] }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [onVisible]);
 
   // Handle like
   const handleLike = async () => {

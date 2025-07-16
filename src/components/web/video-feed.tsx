@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import VideoCard from "./video-card";
 import { getAllVideosWithDetails } from "@/lib/actions/video";
 import { useSession } from "next-auth/react";
+import { FixedSizeList as List, ListOnItemsRenderedProps } from "react-window";
 
 interface Video {
   id: string;
@@ -33,18 +34,21 @@ const VideoFeed: React.FC = () => {
   const [muted, setMuted] = useState(true);
   const [playingIndex, setPlayingIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   
   const { data: session } = useSession();
   const userId = session?.user?.id || null;
 
-  // Load videos từ database
+  // Load videos từ database (phân trang)
   useEffect(() => {
     const loadVideos = async () => {
       try {
         setLoading(true);
-        // Lấy 50 video đầu tiên với thông tin chi tiết
-        const result = await getAllVideosWithDetails(1, 50, userId);
+        const result = await getAllVideosWithDetails(1, 10, userId);
         setVideos(result.videos);
+        setHasMore(result.videos.length < result.total);
         setError(null);
       } catch (err) {
         setError('Không thể tải video. Vui lòng thử lại.');
@@ -53,17 +57,41 @@ const VideoFeed: React.FC = () => {
         setLoading(false);
       }
     };
-
     loadVideos();
   }, [userId]);
 
-  // Khi video vào viewport, cập nhật playingIndex và tự động play
-  const handleVisible = useCallback((index: number) => {
-    if (index !== playingIndex) {
-      setPlayingIndex(index);
+  // Infinite scroll: fetch more videos khi gần cuối
+  const fetchMoreVideos = useCallback(async () => {
+    if (isFetchingMore || !hasMore) return;
+    setIsFetchingMore(true);
+    try {
+      const nextPage = page + 1;
+      const result = await getAllVideosWithDetails(nextPage, 10, userId);
+      setVideos((prev) => [...prev, ...result.videos]);
+      setPage(nextPage);
+      setHasMore((nextPage * 10) < result.total);
+    } catch (err) {
+      setError('Không thể tải thêm video.');
+      console.error('Error loading more videos:', err);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  }, [isFetchingMore, hasMore, page, userId]);
+
+  // Cập nhật playingIndex khi scroll (dựa vào virtual list visible index)
+  const handleItemsRendered = useCallback((props: ListOnItemsRenderedProps) => {
+    const { visibleStartIndex, visibleStopIndex } = props;
+    // Lấy index ở giữa viewport (ưu tiên visibleStartIndex nếu chỉ có 1 item visible)
+    const centerIndex = Math.floor((visibleStartIndex + visibleStopIndex) / 2);
+    if (centerIndex !== playingIndex) {
+      setPlayingIndex(centerIndex);
       setIsPaused(false);
     }
-  }, [playingIndex]);
+    // Infinite scroll: nếu gần cuối thì fetch thêm
+    if (hasMore && visibleStopIndex >= videos.length - 3 && !isFetchingMore) {
+      fetchMoreVideos();
+    }
+  }, [videos.length, hasMore, isFetchingMore, fetchMoreVideos, playingIndex]);
 
   // Khi user bấm mute, cập nhật muted cho toàn bộ feed
   const handleMuteChange = useCallback((value: boolean) => {
@@ -118,23 +146,34 @@ const VideoFeed: React.FC = () => {
     );
   }
 
+  // Item renderer cho react-window
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
+    <div style={style} className="snap-center p-[1em] h-screen flex items-center justify-center">
+      <VideoCard
+        video={videos[index]}
+        playing={playingIndex === index && !isPaused}
+        muted={muted}
+        onMuteChange={handleMuteChange}
+        onPlayToggle={() => handlePlayToggle(index)}
+      />
+    </div>
+  );
+
   return (
-    <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
-      {videos.map((video, idx) => (
-        <div
-          key={video.id}
-          className="snap-center p-[1em] h-screen flex items-center justify-center"
-        >
-          <VideoCard
-            video={video}
-            playing={playingIndex === idx && !isPaused}
-            muted={muted}
-            onVisible={() => handleVisible(idx)}
-            onMuteChange={handleMuteChange}
-            onPlayToggle={() => handlePlayToggle(idx)}
-          />
-        </div>
-      ))}
+    <div className="h-screen">
+      <List
+        height={window.innerHeight}
+        itemCount={videos.length}
+        itemSize={window.innerHeight}
+        width={"100%"}
+        onItemsRendered={handleItemsRendered}
+        className="snap-y snap-mandatory"
+      >
+        {Row}
+      </List>
+      {isFetchingMore && (
+        <div className="w-full flex justify-center py-4 text-white">Đang tải thêm...</div>
+      )}
     </div>
   );
 };
