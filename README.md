@@ -6,10 +6,11 @@ Dự án clone TikTok/Naver TV Shorts với trải nghiệm xem video dọc hi�
 
 - **Feed video dọc**: Lướt video dạng vertical scroll như TikTok/YouTube Shorts.
 - **Tự động phát video**: Video tự động phát khi xuất hiện trên màn hình.
-- **Like, Unlike & Bình luận**: Tương tác trực tiếp với video.
+- **Like, Unlike**: Tương tác thích/bỏ thích video.
 - **Đăng nhập/Đăng ký bằng OAuth**: Hỗ trợ GitHub, Google, Discord.
 - **Trang cá nhân & Quản lý video**: Xem và quản lý video đã đăng.
-- **Upload video**: (Tùy chọn, nếu có thời gian phát triển).
+- **Upload video**: Đã có chức năng upload video.
+- **Bình luận**: (Chưa phát triển)
 
 ## 🛠️ Cài đặt & Khởi chạy
 
@@ -23,18 +24,14 @@ yarn install
 
 ### 2. Thiết lập biến môi trường
 
-Tạo file `.env` ở thư mục gốc với nội dung mẫu:
+- Dự án đã có sẵn file `.env.example` ở thư mục gốc. Để tạo file cấu hình môi trường, hãy chạy lệnh sau:
 
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-GITHUB_ID=your_github_client_id
-GITHUB_SECRET=your_github_client_secret
-GOOGLE_ID=your_google_client_id
-GOOGLE_SECRET=your_google_client_secret
-DISCORD_ID=your_discord_client_id
-DISCORD_SECRET=your_discord_client_secret
-NEXTAUTH_SECRET=your_random_secret
+```bash
+cp .env.example .env
 ```
+
+- Sau đó, mở file `.env` vừa copy và điền các giá trị secret phù hợp (client id/secret của GitHub, Google, Discord, chuỗi kết nối DATABASE_URL, NEXTAUTH_SECRET, ...).
+- Các biến cần thiết đã được liệt kê sẵn trong file `.env.example`.
 
 > **Lưu ý:**  
 > - Đăng ký ứng dụng trên GitHub, Google, Discord để lấy client id/secret.  
@@ -61,12 +58,12 @@ Truy cập [http://localhost:3000](http://localhost:3000) để trải nghiệm 
 
 ## 🗄️ Cấu trúc Database (Prisma)
 
-- **User**: Thông tin người dùng, liên kết OAuth, video, comment, like.
+- **User**: Thông tin người dùng, liên kết OAuth, video, like.
 - **Account**: Lưu tài khoản OAuth.
 - **Session**: Quản lý phiên đăng nhập.
 - **VerificationToken**: Token xác thực (nếu dùng email).
-- **Video**: Thông tin video, liên kết user, comment, like.
-- **Comment**: Bình luận của user cho video.
+- **Video**: Thông tin video, liên kết user, like.
+- **Comment**: (Chưa phát triển)
 - **Like**: Like của user cho video.
 
 Chi tiết: [`prisma/schema.prisma`](prisma/schema.prisma)
