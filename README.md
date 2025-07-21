@@ -146,6 +146,34 @@ Truy cập [http://localhost:3000](http://localhost:3000) để trải nghiệm 
 
 ---
 
+## 📦 Hướng dẫn tạo biến môi trường cho Pinata (IPFS Upload)
+
+### 1. Đăng ký tài khoản Pinata
+
+1. Truy cập [Pinata Cloud](https://app.pinata.cloud/) và đăng ký tài khoản (miễn phí hoặc trả phí).
+
+### 2. Tạo API Key
+
+1. Sau khi đăng nhập, vào mục **API Keys** trên dashboard.
+2. Nhấn **New Key** để tạo một API Key mới.
+3. Đặt tên (label) cho key, chọn quyền truy cập phù hợp (nên để full access hoặc ít nhất là quyền upload/read).
+4. Nhấn **Create Key**.
+5. Lưu lại **API Key** và **API Secret** (chỉ hiển thị một lần).
+
+### 3. Thêm vào biến môi trường
+
+Thêm các biến sau vào file `.env`:
+
+```
+PINATA_API_KEY=your_pinata_api_key
+PINATA_API_SECRET=your_pinata_api_secret
+```
+
+> **Lưu ý:**  
+> Không chia sẻ các thông tin này công khai. Nếu deploy lên Vercel, hãy thêm các biến này vào phần Environment Variables của dự án trên Vercel.
+
+---
+
 > **Lưu ý:**  
 > Khi deploy lên production, hãy thay đổi các URL callback và homepage cho phù hợp với domain thật của bạn.
 
