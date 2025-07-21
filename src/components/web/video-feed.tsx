@@ -150,7 +150,7 @@ const VideoFeed: React.FC = () => {
 
   // Item renderer cho react-window
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
-    <div style={style} className="snap-center p-[1em] h-screen flex items-center justify-center">
+    <div style={style} className="snap-center p-0 sm:p-[1em] h-screen flex items-center justify-center">
       <VideoCard
         video={videos[index]}
         playing={playingIndex === index && !isPaused}

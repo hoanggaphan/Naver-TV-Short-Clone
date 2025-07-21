@@ -14,29 +14,31 @@ export default async function Profile() {
   const totalVideos = user ? await getUserVideosCount(user.id) : 0;
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <div className="flex items-center gap-6 mb-8">
-        <Avatar className="w-24 h-24">
-          <AvatarImage src={user?.image || "/avatar.jpeg"} alt={user?.name || "avatar"} />
-          <AvatarFallback>
-            {user?.name?.[0]?.toUpperCase() || <User2 className="w-8 h-8" />}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="flex items-center gap-2 text-2xl font-bold">
-            <User2 className="w-6 h-6 text-primary" />
-            {user?.name || "Chưa đặt tên"}
-          </div>
-          <div className="flex items-center gap-2 text-muted-foreground mt-1">
-            <Mail className="w-4 h-4" />
-            {user?.email}
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <Video className="w-4 h-4 text-primary" />
-            <span className="font-medium">{totalVideos}</span> video
+    <div className="max-w-3xl mx-auto py-8 px-2 sm:px-4">
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8 mb-8 w-full">
+        <div className="flex flex-col items-center w-full md:w-auto">
+          <Avatar className="w-24 h-24 md:w-28 md:h-28 mb-3 shadow-lg">
+            <AvatarImage src={user?.image || "/avatar.jpeg"} alt={user?.name || "avatar"} />
+            <AvatarFallback>
+              {user?.name?.[0]?.toUpperCase() || <User2 className="w-8 h-8" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col items-center text-center w-full">
+            <div className="flex items-center justify-center gap-2 text-xl md:text-2xl font-bold">
+              <User2 className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+              {user?.name || "Chưa đặt tên"}
+            </div>
+            <div className="flex items-center justify-center gap-2 text-muted-foreground mt-1 text-sm md:text-base">
+              <Mail className="w-4 h-4" />
+              {user?.email}
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-2 text-sm md:text-base">
+              <Video className="w-4 h-4 text-primary" />
+              <span className="font-medium">{totalVideos}</span> video
+            </div>
           </div>
         </div>
-        <div className="ml-auto">
+        <div className="w-full flex justify-center md:justify-end mt-4 md:mt-0">
           <LogoutButton />
         </div>
       </div>

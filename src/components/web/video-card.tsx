@@ -128,7 +128,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
   };
 
   return (
-    <div ref={ref} className="relative aspect-[0.5625] bg-black rounded-xl overflow-hidden min-w-[320px] min-h-[568px] h-full group">
+    <div ref={ref} className="mb-[100px] md:mb-0 relative aspect-[0.5625] bg-black sm:rounded-xl overflow-hidden min-w-[320px] min-h-[568px] h-full group">
       <ReactPlayer
         src={video.videoUrl}
         playing={playing}
