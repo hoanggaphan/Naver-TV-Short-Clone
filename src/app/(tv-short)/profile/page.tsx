@@ -1,11 +1,10 @@
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getCurrentUser } from "@/lib/actions/user";
 import { getUserVideosCount } from "@/lib/actions/video";
-import { Button } from "@/components/ui/button";
-import { User2, Mail, Video, LogOut } from "lucide-react";
-import { logout } from "@/lib/actions/auth";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Mail, User2, Video } from "lucide-react";
+import { redirect } from "next/navigation";
+import LogoutButton from "./_components/LogoutButton";
 
 export default async function Profile() {
   const session = await auth();
@@ -38,11 +37,7 @@ export default async function Profile() {
           </div>
         </div>
         <div className="ml-auto">
-          <form action={logout}>
-            <Button variant="outline" type="submit">
-              <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
-            </Button>
-          </form>
+          <LogoutButton />
         </div>
       </div>
     </div>
