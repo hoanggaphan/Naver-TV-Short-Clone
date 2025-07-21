@@ -56,6 +56,39 @@ Truy cập [http://localhost:3000](http://localhost:3000) để trải nghiệm 
 
 ---
 
+## ☁️ Hướng dẫn tạo Database với Vercel & Pull file .env
+
+### 1. Tạo Database trên Vercel
+
+1. Truy cập [Vercel Dashboard](https://vercel.com/dashboard).
+2. Chọn dự án của bạn hoặc tạo mới nếu chưa có.
+3. Vào mục **Storage** > **PostgreSQL** (hoặc chọn loại database bạn muốn).
+4. Tạo một instance database mới, đặt tên và cấu hình theo nhu cầu.
+5. Sau khi tạo xong, copy các thông tin kết nối (host, database, user, password, port).
+
+### 2. Thiết lập biến môi trường (.env)
+
+1. Trên Vercel, vào mục **Project Settings** > **Environment Variables**.
+2. Thêm các biến môi trường cần thiết, ví dụ:
+   ```
+   DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+   ```
+3. Để pull file .env về máy local, bạn cần cài đặt Vercel CLI:
+   ```bash
+   npm i -g vercel
+   ```
+4. Đăng nhập Vercel CLI:
+   ```bash
+   vercel login
+   ```
+5. Pull biến môi trường về file `.env.local`:
+   ```bash
+   vercel env pull .env.local
+   ```
+6. Đổi tên file `.env.local` thành `.env` nếu dự án sử dụng file `.env`.
+
+---
+
 ## 🗄️ Cấu trúc Database (Prisma)
 
 - **User**: Thông tin người dùng, liên kết OAuth, video, like.
