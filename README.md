@@ -89,6 +89,68 @@ Truy cập [http://localhost:3000](http://localhost:3000) để trải nghiệm 
 
 ---
 
+## 🔑 Hướng dẫn tạo biến môi trường OAuth (GitHub, Google, Discord)
+
+### 1. GitHub
+
+1. Truy cập [GitHub Developer Settings](https://github.com/settings/developers).
+2. Chọn **OAuth Apps** > **New OAuth App**.
+3. Điền thông tin:
+   - **Application name**: Tên ứng dụng (tùy chọn).
+   - **Homepage URL**: `http://localhost:3000` (hoặc domain thật nếu deploy).
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. Nhấn **Register application**.
+5. Sau khi tạo xong, copy **Client ID** và **Client Secret**.
+6. Thêm vào biến môi trường:
+   ```
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   ```
+
+---
+
+### 2. Google
+
+1. Truy cập [Google Cloud Console](https://console.cloud.google.com/).
+2. Tạo một project mới (nếu chưa có).
+3. Vào **APIs & Services** > **Credentials**.
+4. Chọn **Create Credentials** > **OAuth client ID**.
+5. Chọn **Web application**.
+6. Thêm **Authorized redirect URIs**:
+   ```
+   http://localhost:3000/api/auth/callback/google
+   ```
+7. Nhấn **Create** và copy **Client ID** và **Client Secret**.
+8. Thêm vào biến môi trường:
+   ```
+   GOOGLE_CLIENT_ID=your_client_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   ```
+
+---
+
+### 3. Discord
+
+1. Truy cập [Discord Developer Portal](https://discord.com/developers/applications).
+2. Nhấn **New Application** và đặt tên.
+3. Vào mục **OAuth2** > **Redirects** > **Add Redirect**:
+   ```
+   http://localhost:3000/api/auth/callback/discord
+   ```
+4. Vào **OAuth2** > **General** để lấy **Client ID** và **Client Secret**.
+5. Thêm vào biến môi trường:
+   ```
+   DISCORD_CLIENT_ID=your_client_id
+   DISCORD_CLIENT_SECRET=your_client_secret
+   ```
+
+---
+
+> **Lưu ý:**  
+> Khi deploy lên production, hãy thay đổi các URL callback và homepage cho phù hợp với domain thật của bạn.
+
+---
+
 ## 🗄️ Cấu trúc Database (Prisma)
 
 - **User**: Thông tin người dùng, liên kết OAuth, video, like.
